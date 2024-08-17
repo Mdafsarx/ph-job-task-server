@@ -1,18 +1,35 @@
 const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const cors = require('cors')
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
-
-
 const app = express();
 const port = process.env.PORT || 1000;
 
+
 app.use(cors());
 app.use(express.json())
+app.use(cookieParser());
+// middleWare
+app.use(
+    cors({
+      origin: [
+        "http://localhost:5173",
+      ],
+      credentials: true
+    })
+  );
 
 
 
+
+const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+}
 app.get('/', (req, res) => {
     res.send('The server in running')
 })
@@ -38,7 +55,14 @@ async function run() {
         // await client.db("admin").command({ ping: 1 });
 
         // data-base
-        const Users = client.db("PaygunDB").collection('Users')
+        const Users = client.db("PaygunDB").collection('Users');
+
+        // token 
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN);
+            res.send({ token })
+          })
 
 
         // reg api
@@ -49,7 +73,6 @@ async function run() {
             const result = await Users.insertOne(User);
             res.send(result)
         })
-
         // login api
         app.post('/Login', async (req, res) => {
 
@@ -79,6 +102,13 @@ async function run() {
             }
 
         })
+        
+        app.get('/users',async(req,res)=>{
+          const result= await Users.find().toArray();
+          res.send(result);
+        })
+
+
 
 
 
