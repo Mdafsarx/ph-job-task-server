@@ -63,7 +63,7 @@ async function run() {
             const token = jwt.sign(user, process.env.ACCESS_TOKEN);
             res.send({ token })
           })
-
+    
 
         // reg api
         app.post('/Register', async (req, res) => {
